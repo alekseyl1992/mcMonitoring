@@ -1,0 +1,32 @@
+Hi, %v! Good to see you again.
+Hallo %v! Schön dich wieder zu sehen.
+Salam, İqor! Yenidən görmək yaxşıdır.
+Përshëndetje, %v! Mirë që të shoh përsëri.
+Сәлем, %v! Қайта кездескеніме қуаныштымын.
+Hei %v! Godt å se deg igjen.
+Bawo, %v! O dara lati ri ọ lẹẹkansi.
+Сәлам, %v! Сезне кабат күрү яхшы.
+Hei, %v! Hyvä nähdä teidät taas.
+Kumusta, %v! Magandang makita ka ulit.
+Salut, %v! Ravi de vous revoir.
+Barka dai, %v! Yana da kyau in sake ganin ku.
+Nyob zoo, %v! Zoo siab tau ntsib koj dua.
+Bok, %ve! Drago mi je da te opet vidim.
+Saluton, %v! Bonas revidi vin.
+Tere, %v! Tore sind taas näha.
+Hai, %v! Apik kanggo ndeleng sampeyan maneh.
+Hi, %v! Tajjeb li nerġgħu narak.
+Dia duit, %v! Maith thú a fheiceáil arís.
+Sawubona, %v! Kuhle ukukubona futhi.
+Ola, %v! Ben para verte de novo.
+Hola, %v! És bo tornar-te a veure.
+Hæ, %v! Gott að sjá þig aftur.
+Kaixo, %v! Ona berriz ikustea.
+Hi, %v! Math ur faicinn a-rithist.
+Hoi %v! Goed om dy wer te sjen.
+Здраво, %v! Добро да те видам повторно.
+Labas, %v! Malonu vėl jus pamatyti.
+Hej %v! Godt at se dig igen.
+Hi, %v! Góð til sjá þú again
+Hi, %v! Good oððicgan sêon êow siðða and.
+Helo, %v! Da eich gweld chi eto.

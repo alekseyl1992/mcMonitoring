@@ -1,16 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/adamperlin/rcon"
 	"github.com/caarlos0/env/v6"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
+
+var greetings []string
 
 func execCommand(cfg config, command string) (string, error) {
 	client, err := rcon.NewClient(cfg.RconHost, cfg.RconPort)
@@ -85,7 +90,10 @@ func iteration(cfg config, bot *tgbotapi.BotAPI, lastPlayersPtr *[]string, first
 		joinedPlayers := difference(players, lastPlayers)
 
 		for _, userName := range joinedPlayers {
-			_, err := execCommand(cfg, fmt.Sprintf("/say Hi, %v! Good to see you again.", userName))
+			greeting := greetings[rand.Intn(len(greetings))]
+			greeting = fmt.Sprintf(greeting, userName)
+
+			_, err := execCommand(cfg, fmt.Sprintf("/say %v", greeting))
 			if err != err {
 				log.Print(err)
 				return
@@ -129,7 +137,9 @@ type config struct {
 	RconPort int    `env:"RCON_PORT"`
 	RconPass string `env:"RCON_PASS"`
 
-	SleepInterval time.Duration `env:"SLEEP_INTERVAL" envDefault:"5s"`
+	DataPath string `env:"DATA_PATH" envDefault:"./data"`
+
+	SleepInterval time.Duration `env:"SLEEP_INTERVAL" envDefault:"7s"`
 }
 
 func main() {
@@ -137,6 +147,25 @@ func main() {
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Panic(err)
+	}
+
+	file, err := os.Open(fmt.Sprintf("%v/greetings.txt", cfg.DataPath))
+	if err != nil {
+		log.Fatal(err)
+	}
+	// noinspection GoUnhandledErrorResult
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		greeting := strings.Trim(scanner.Text(), "\r\n ")
+		if len(greeting) != 0 {
+			greetings = append(greetings, greeting)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
 	}
 
 	var client http.Client

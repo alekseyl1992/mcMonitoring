@@ -16,4 +16,6 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/main .
 
+ADD data data
+
 CMD ["./main"]
