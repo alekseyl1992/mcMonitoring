@@ -1,6 +1,6 @@
 Hi, %v! Good to see you again.
 Hallo %v! Schön dich wieder zu sehen.
-Salam, İqor! Yenidən görmək yaxşıdır.
+Salam, %v! Yenidən görmək yaxşıdır.
 Përshëndetje, %v! Mirë që të shoh përsëri.
 Сәлем, %v! Қайта кездескеніме қуаныштымын.
 Hei %v! Godt å se deg igjen.

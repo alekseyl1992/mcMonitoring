@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -66,6 +67,26 @@ func newMessageWithParseMode(chatID int64, text string, parseMode string) tgbota
 	return message
 }
 
+func getGreeter(cfg config, userName string) string {
+	// get list of all custom named entities sorted by distance
+	resultStr, err := execCommand(
+		cfg, fmt.Sprintf(
+			"/execute at %v run execute as @e[sort=nearest] at %v run data get entity @s CustomName",
+			userName, userName))
+	if err != err {
+		log.Print(err)
+		return ""
+	}
+
+	re := regexp.MustCompile(`(.*?) has the following`)
+	groups := re.FindStringSubmatch(resultStr)
+	if groups == nil {
+		return ""
+	}
+
+	return groups[1]
+}
+
 func iteration(cfg config, bot *tgbotapi.BotAPI, lastPlayersPtr *[]string, firstRun *bool) {
 	lastPlayers := *lastPlayersPtr
 
@@ -90,11 +111,20 @@ func iteration(cfg config, bot *tgbotapi.BotAPI, lastPlayersPtr *[]string, first
 		joinedPlayers := difference(players, lastPlayers)
 
 		for _, userName := range joinedPlayers {
+			greeter := getGreeter(cfg, userName)
+
 			greeting := greetings[rand.Intn(len(greetings))]
 			greeting = fmt.Sprintf(greeting, userName)
 
-			_, err := execCommand(cfg, fmt.Sprintf("/say %v", greeting))
-			if err != err {
+			var err error
+			if greeter != "" {
+				_, err = execCommand(cfg, fmt.Sprintf(
+					"/execute as @e[nbt={CustomName: '{\"text\":\"%v\"}'},limit=1] run say %v",
+					greeter, greeting))
+			} else {
+				_, err = execCommand(cfg, fmt.Sprintf("/say %v", greeting))
+			}
+			if err != nil {
 				log.Print(err)
 				return
 			}
@@ -139,7 +169,7 @@ type config struct {
 
 	DataPath string `env:"DATA_PATH" envDefault:"./data"`
 
-	SleepInterval time.Duration `env:"SLEEP_INTERVAL" envDefault:"7s"`
+	SleepInterval time.Duration `env:"SLEEP_INTERVAL" envDefault:"5s"`
 }
 
 func main() {
@@ -148,6 +178,8 @@ func main() {
 	if err := env.Parse(&cfg); err != nil {
 		log.Panic(err)
 	}
+
+	rand.Seed(time.Now().UnixNano())
 
 	file, err := os.Open(fmt.Sprintf("%v/greetings.txt", cfg.DataPath))
 	if err != nil {
