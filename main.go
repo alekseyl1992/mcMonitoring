@@ -18,17 +18,10 @@ import (
 
 var greetings []string
 
-func execCommand(cfg config, command string) (string, error) {
-	client, err := rcon.NewClient(cfg.RconHost, cfg.RconPort)
-
-	if nil != err {
-		log.Print("Failed to open TCP connection to server.")
-		return "", err
-	}
-
+func execCommand(cfg config, client *rcon.Client, command string) (string, error) {
 	var packet *rcon.Packet
 
-	packet, err = client.Authorize(cfg.RconPass)
+	packet, err := client.Authorize(cfg.RconPass)
 
 	if nil != err {
 		log.Print("Failed to authorize your connection with the server.")
@@ -67,10 +60,10 @@ func newMessageWithParseMode(chatID int64, text string, parseMode string) tgbota
 	return message
 }
 
-func getGreeter(cfg config, userName string) string {
+func getGreeter(cfg config, rconClient *rcon.Client, userName string) string {
 	// get list of all custom named entities sorted by distance
 	resultStr, err := execCommand(
-		cfg, fmt.Sprintf(
+		cfg, rconClient, fmt.Sprintf(
 			"/execute at %v run execute as @e[sort=nearest] at %v run data get entity @s CustomName",
 			userName, userName))
 	if err != err {
@@ -87,10 +80,12 @@ func getGreeter(cfg config, userName string) string {
 	return groups[1]
 }
 
-func iteration(cfg config, bot *tgbotapi.BotAPI, lastPlayersPtr *[]string, firstRun *bool) {
+func iteration(cfg config,
+	rconClient *rcon.Client, bot *tgbotapi.BotAPI, lastPlayersPtr *[]string, firstRun *bool) {
+
 	lastPlayers := *lastPlayersPtr
 
-	resultStr, err := execCommand(cfg, "/list")
+	resultStr, err := execCommand(cfg, rconClient, "/list")
 	if err != err {
 		log.Print(err)
 		return
@@ -111,18 +106,18 @@ func iteration(cfg config, bot *tgbotapi.BotAPI, lastPlayersPtr *[]string, first
 		joinedPlayers := difference(players, lastPlayers)
 
 		for _, userName := range joinedPlayers {
-			greeter := getGreeter(cfg, userName)
+			greeter := getGreeter(cfg, rconClient, userName)
 
 			greeting := greetings[rand.Intn(len(greetings))]
 			greeting = fmt.Sprintf(greeting, userName)
 
 			var err error
 			if greeter != "" {
-				_, err = execCommand(cfg, fmt.Sprintf(
+				_, err = execCommand(cfg, rconClient, fmt.Sprintf(
 					"/execute as @e[nbt={CustomName: '{\"text\":\"%v\"}'},limit=1] run say %v",
 					greeter, greeting))
 			} else {
-				_, err = execCommand(cfg, fmt.Sprintf("/say %v", greeting))
+				_, err = execCommand(cfg, rconClient, fmt.Sprintf("/say %v", greeting))
 			}
 			if err != nil {
 				log.Print(err)
@@ -217,13 +212,26 @@ func main() {
 		panic(err)
 	}
 
+	rconClient, err := rcon.NewClient(cfg.RconHost, cfg.RconPort)
+	if nil != err {
+		log.Printf("Failed to connect to %v:%v", cfg.RconHost, cfg.RconPort)
+		panic(err)
+	}
+	defer func() {
+		err := rconClient.Connection.Close()
+		if err != nil {
+			log.Print("Failed to close rcon connection")
+			panic(err)
+		}
+	}()
+
 	log.Print("Started")
 
 	lastPlayers := make([]string, 0)
 	firstRun := true
 
 	for {
-		iteration(cfg, bot, &lastPlayers, &firstRun)
+		iteration(cfg, rconClient, bot, &lastPlayers, &firstRun)
 		time.Sleep(cfg.SleepInterval)
 	}
 }
